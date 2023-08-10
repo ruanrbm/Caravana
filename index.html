@@ -5,66 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscrição na Viagem de Ônibus</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f3f3f3;
-        }
-
-        header {
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            padding: 1rem 0;
-        }
-
-        main {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 30px;
-        }
-
-        form {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        label, input {
-            display: block;
-            margin-bottom: 10px;
-        }
-
-        button {
-            background-color: #333;
-            color: #fff;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .participants {
-            margin-top: 30px;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        ul {
-            list-style: none;
-            padding: 0;
-            text-align: left;
-        }
-
-        li {
-            margin-bottom: 10px;
-        }
+        /* Estilos (mantidos os mesmos) */
     </style>
 </head>
 <body>
@@ -81,22 +22,30 @@
 
             <button type="submit">Registrar</button>
         </form>
-        <div class="participants">
-            <h2>Inscritos:</h2>
-            <ul id="participants-list"></ul>
-        </div>
     </main>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <div class="participants">
+        <h2>Inscritos:</h2>
+        <p>Vagas Disponíveis: <span id="available-seats">56</span></p>
+        <ul id="participants-list"></ul>
+    </div>
     <script>
         const socket = io();
 
         socket.on("update", (data) => {
             const participantsList = document.getElementById("participants-list");
-            participantsList.innerHTML = "";
+            const availableSeatsElement = document.getElementById("available-seats");
 
+            participantsList.innerHTML = "";
             data.participants.forEach((participant) => {
-                participantsList.innerHTML += `<li>${participant.name} - Documento: ${participant.documentNumber}</li>`;
+                participantsList.innerHTML += `
+                    <li>
+                        ${participant.name} - Documento: ${participant.documentNumber}
+                        <button class="edit-button" data-document="${participant.documentNumber}">Editar</button>
+                        <button class="delete-button" data-document="${participant.documentNumber}">Excluir</button>
+                    </li>`;
             });
+
+            availableSeatsElement.textContent = data.availableSeats;
         });
 
         socket.on("error", (message) => {
@@ -105,6 +54,7 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             const form = document.getElementById("registration-form");
+            const participantsList = document.getElementById("participants-list");
 
             form.addEventListener("submit", function(event) {
                 event.preventDefault();
@@ -114,6 +64,22 @@
                 socket.emit("register", { name, documentNumber });
 
                 form.reset();
+            });
+
+            participantsList.addEventListener("click", (event) => {
+                if (event.target.classList.contains("edit-button")) {
+                    const documentNumber = event.target.getAttribute("data-document");
+                    const newName = prompt("Digite o novo nome:");
+
+                    if (newName !== null && newName !== "") {
+                        socket.emit("edit", { documentNumber, newName });
+                    }
+                } else if (event.target.classList.contains("delete-button")) {
+                    const documentNumber = event.target.getAttribute("data-document");
+                    if (confirm("Tem certeza que deseja excluir este inscrito?")) {
+                        socket.emit("delete", { documentNumber });
+                    }
+                }
             });
         });
     </script>

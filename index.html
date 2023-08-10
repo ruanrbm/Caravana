@@ -36,10 +36,10 @@
             const availableSeatsElement = document.getElementById("available-seats");
 
             participantsList.innerHTML = "";
-            data.participants.forEach((participant) => {
+            data.participants.forEach((participant, index) => {
                 participantsList.innerHTML += `
                     <li>
-                        ${participant.name} - Documento: ${participant.documentNumber}
+                        ${index + 1}. ${participant.name} - Documento: ${participant.documentNumber}
                         <button class="edit-button" data-document="${participant.documentNumber}">Editar</button>
                         <button class="delete-button" data-document="${participant.documentNumber}">Excluir</button>
                     </li>`;
